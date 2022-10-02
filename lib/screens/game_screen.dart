@@ -22,7 +22,7 @@ class _GameScreenState extends State<GameScreen> {
   Set<String> matrixSet = HashSet<String>();
   String selectedWord = '';
 
-  int wordsNum = 10;
+  int wordsNum = 15;
   int maxHeight = 30;
   int maxWidth = 30;
 
@@ -40,8 +40,6 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('${matrixSet.length} ${selectedMatrixSet.length}');
-
     return Scaffold(
       body: Container(
         child: Column(
@@ -86,7 +84,7 @@ class _GameScreenState extends State<GameScreen> {
     String tempWord = '';
     while (wordSet.length < 10 ){
       tempWord = wordsList[random.nextInt(wordsList.length)];
-      if(tempWord.length <= 10 && !wordSet.contains(tempWord)){
+      if(tempWord.length <= 5 && !wordSet.contains(tempWord)){
         wordSet.add(tempWord);
       }
     }
@@ -94,8 +92,11 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void initMatrix() {
-    List<List<Widget>> mat = [for(int i=0; i<wordsNum; i++) [for(int j=0; j<wordsNum; j++) Container()] ];
-    for(String word in wordSet){
+    List<List<Widget>> mat = [
+      for(int i=0; i<wordsNum; i++)
+        [for(int j=0; j<wordsNum; j++) Container(),]
+    ];
+    for(final word in wordSet){
       mat = insertWordInMat(word, mat);
     }
     matrix = fillUpMatCharacters(mat);
@@ -113,7 +114,7 @@ class _GameScreenState extends State<GameScreen> {
             canBeInserted = checkIfCanBeInsertedAtPos(word, mat, i, j, isHorizontal);
           }
           if(canBeInserted){
-            print('word: $word, canBeInserted: $canBeInserted, $i,$j');
+            print('word: $word, canBeInserted: $canBeInserted, $i, $j');
             mat=insertInMatAtPos(word, mat, i, j, isHorizontal);
             break insertloop;
           }
@@ -131,7 +132,17 @@ class _GameScreenState extends State<GameScreen> {
       }else{
         i = row+k;
       }
-      if(i>=mat.length || j>= mat[i].length || mat[i][j].runtimeType == MatrixBox){
+
+      if(i>=mat.length ){
+        print('word: $word, i:$i, j:$j -1');
+        return false;
+      }
+      else if( j>= mat[i].length ){
+        print('word: $word, i:$i, j:$j -2');
+        return false;
+      }
+     else if(mat[i][j].runtimeType == MatrixBox){
+        print('word: $word, i:$i, j:$j -3');
         return false;
       }
     }
@@ -155,15 +166,12 @@ class _GameScreenState extends State<GameScreen> {
     return mat;
   }
 
-  bool isBoxSelected(String s) {
-    return selectedMatrixSet.contains(s);
-  }
+  bool isBoxSelected(String s) => selectedMatrixSet.contains(s);
 
-  bool hasBeenSelected(String s) {
-    return matrixSet.contains(s);
-  }
+  bool hasBeenSelected(String s) => matrixSet.contains(s);
 
   onCharacterEntered(String p1) {
+    // print('p1: $p1');
     if(selectedMatrixSet.contains(p1) || !isInLine(p1))return;
     final wordData = p1.split(',');
     selectedMatrixSet.add(p1);
@@ -173,12 +181,15 @@ class _GameScreenState extends State<GameScreen> {
 
   List<List<MatrixBox>> fillUpMatCharacters(List<List<Widget>> mat) {
     List<List<MatrixBox>> result = [for(int i=0; i<wordsNum; i++)
-      [for(int j=0; j<wordsNum; j++) MatrixBox(character: 'character', positioon: 'positioon', isSelected: false, hasBeenSelected: false, onCharacterEntered: onCharacterEntered)]
+      [for(int j=0; j<wordsNum; j++)
+        MatrixBox(character: 'character', positioon: 'positioon',
+          isSelected: false, hasBeenSelected: false, onCharacterEntered: onCharacterEntered)
+      ]
     ];
     for(int i=0; i<result.length; i++){
       for(int j=0; j<result[i].length; j++){
         if(mat[i][j].runtimeType != MatrixBox){
-          result[i][j] = MatrixBox(character: characters[random.nextInt(26)], positioon: '$i,$j',
+          result[i][j] = MatrixBox(character: ' ', positioon: '$i,$j',
               isSelected: isBoxSelected('$i,$j'), onCharacterEntered: onCharacterEntered,
             hasBeenSelected: hasBeenSelected('$i,$j')
           );
@@ -197,7 +208,6 @@ class _GameScreenState extends State<GameScreen> {
 
   resolveSelectedWord() {
     /// If word is already selected, cancel
-    /// If word is n
     if(wordSet.contains(selectedWord)){
       selectedMatrixSet.add(selectedWord);
       matrixSet.addAll(selectedMatrixSet);
