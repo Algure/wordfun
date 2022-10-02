@@ -86,7 +86,7 @@ class _GameScreenState extends State<GameScreen> {
     String tempWord = '';
     while (wordSet.length < 10 ){
       tempWord = wordsList[random.nextInt(wordsList.length)];
-      if(tempWord.length <= 13 && !wordSet.contains(tempWord)){
+      if(tempWord.length <= 10 && !wordSet.contains(tempWord)){
         wordSet.add(tempWord);
       }
     }
@@ -95,7 +95,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void initMatrix() {
     List<List<Widget>> mat = [for(int i=0; i<wordsNum; i++) [for(int j=0; j<wordsNum; j++) Container()] ];
-    for(String word in wordsList){
+    for(String word in wordSet){
       mat = insertWordInMat(word, mat);
     }
     matrix = fillUpMatCharacters(mat);
@@ -113,8 +113,8 @@ class _GameScreenState extends State<GameScreen> {
             canBeInserted = checkIfCanBeInsertedAtPos(word, mat, i, j, isHorizontal);
           }
           if(canBeInserted){
-            insertInMatAtPos(word, mat, i, j, isHorizontal);
-            wordSet.add(word);
+            print('word: $word, canBeInserted: $canBeInserted, $i,$j');
+            mat=insertInMatAtPos(word, mat, i, j, isHorizontal);
             break insertloop;
           }
         }
@@ -135,7 +135,7 @@ class _GameScreenState extends State<GameScreen> {
         return false;
       }
     }
-    return false;
+    return true;
   }
 
   List<List<Widget>> insertInMatAtPos(String word, List<List<Widget>> mat,
@@ -147,7 +147,7 @@ class _GameScreenState extends State<GameScreen> {
       }else{
         i = row+k;
       }
-      mat[row][col] = MatrixBox(character: word[k], positioon: '$i,$j',
+      mat[i][j] = MatrixBox(character: word[k], positioon: '$i,$j',
           isSelected: isBoxSelected('$i,$j'), onCharacterEntered: onCharacterEntered,
         hasBeenSelected: hasBeenSelected('$i,$j')
       );
@@ -164,18 +164,17 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   onCharacterEntered(String p1) {
-    if(selectedMatrixSet.contains(p1))return;
+    if(selectedMatrixSet.contains(p1) || !isInLine(p1))return;
     final wordData = p1.split(',');
     selectedMatrixSet.add(p1);
     selectedWord += matrix[int.parse(wordData[0])][int.parse(wordData[1])].character;
     setState(() {});
-    print('p1  $p1, $selectedWord');
   }
 
   List<List<MatrixBox>> fillUpMatCharacters(List<List<Widget>> mat) {
-    List<List<MatrixBox>> result = [for(int i=0; i<wordsNum; i++) [for(int j=0; j<wordsNum; j++)
-      MatrixBox(character: 'character', positioon: 'positioon', isSelected: false, hasBeenSelected: false,
-          onCharacterEntered: onCharacterEntered)] ];
+    List<List<MatrixBox>> result = [for(int i=0; i<wordsNum; i++)
+      [for(int j=0; j<wordsNum; j++) MatrixBox(character: 'character', positioon: 'positioon', isSelected: false, hasBeenSelected: false, onCharacterEntered: onCharacterEntered)]
+    ];
     for(int i=0; i<result.length; i++){
       for(int j=0; j<result[i].length; j++){
         if(mat[i][j].runtimeType != MatrixBox){
@@ -199,15 +198,32 @@ class _GameScreenState extends State<GameScreen> {
   resolveSelectedWord() {
     /// If word is already selected, cancel
     /// If word is n
-    // if(wordSet.contains(selectedWord)){
+    if(wordSet.contains(selectedWord)){
       selectedMatrixSet.add(selectedWord);
       matrixSet.addAll(selectedMatrixSet);
       selectedWordSet.add(selectedWord);
-    // }
+    }
     resetSelectedWord();
-    // if(mounted){
+    if(mounted){
       setState(() { });
-    // }
+    }
+  }
+
+  bool isInLine(String p1) {
+    if(selectedMatrixSet.length==0) return true;
+    if(selectedMatrixSet.length==1) {
+      final list1 = selectedMatrixSet.first.split(',');
+      final list = p1.split(',');
+      return list1[0]==list[0] || list[1]==list1[1];
+    }
+    final list1 = selectedMatrixSet.first.split(',');
+    final list2 = selectedMatrixSet.last.split(',');
+    final list = p1.split(',');
+    if(list1[1]==list2[1]){
+      return list[1] == list2[1];
+    }else{
+      return list[0] == list2[0];
+    }
   }
 }
 
