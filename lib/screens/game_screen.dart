@@ -96,6 +96,7 @@ class _GameScreenState extends State<GameScreen> {
       for(int i=0; i<wordsNum; i++)
         [for(int j=0; j<wordsNum; j++) Container(),]
     ];
+
     for(final word in wordSet){
       mat = insertWordInMat(word, mat);
     }
